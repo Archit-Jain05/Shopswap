@@ -3,8 +3,12 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-export const roaming = process.env.APPDATA ?? path.join(os.homedir(), '.config')
+// where Shopify CLI keeps its shopify-cli-*-nodejs folders (env-paths conventions)
+export const roaming = process.env.APPDATA ?? (process.platform === 'darwin' ? path.join(os.homedir(), 'Library', 'Preferences') : process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), '.config'))
+// on Windows env-paths nests the config in a Config/ subfolder, elsewhere it doesn't
+const cfgDir = process.env.APPDATA ? ['Config'] : []
 const home = process.env.SHOPSWAP_HOME ?? path.join(os.homedir(), '.shopswap')
 const indexFile = path.join(home, 'accounts.json') // { active: name|null, accounts: [name, ...] }
 const isCli = d => /^shopify-cli-.*-nodejs$/.test(d)
@@ -20,10 +24,10 @@ export const show = (s, h) => (s.labels[h] ? `${s.labels[h]} (${h})` : h)
 const store = s => { fs.mkdirSync(home, { recursive: true }); fs.writeFileSync(indexFile, JSON.stringify(s, null, 1)) }
 
 const storeCfg = dir => {
-  try { return JSON.parse(fs.readFileSync(path.join(dir, 'shopify-cli-store-nodejs', 'Config', 'config.json'), 'utf8')) } catch { return {} }
+  try { return JSON.parse(fs.readFileSync(path.join(dir, 'shopify-cli-store-nodejs', ...cfgDir, 'config.json'), 'utf8')) } catch { return {} }
 }
 
-// shops this snapshot has sessions for, e.g. ["xhp0ym-sn"]
+// shops this snapshot has sessions for, e.g. ["my-store"]
 export function shops(dir) {
   return Object.keys(storeCfg(dir)).map(k => k.split('::')[1]?.replace('.myshopify.com', '')).filter(Boolean)
 }
@@ -127,7 +131,7 @@ export function run([cmd, ref, ...rest]) {
   }
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname.replace(/^\/(\w:)/, '$1'))) {
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
   const args = process.argv.slice(2)
   const fail = e => { console.error(`shopswap: error: ${e.message}`); process.exit(1) }
   try {

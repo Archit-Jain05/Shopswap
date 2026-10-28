@@ -1,0 +1,13 @@
+{
+  "name": "shopswap",
+  "version": "0.1.0",
+  "description": "Multi-account switcher for Shopify CLI: save logins, switch between them without logging out.",
+  "type": "module",
+  "bin": { "shopswap": "shopswap.mjs" },
+  "files": ["shopswap.mjs", "tui.mjs", "shopswap.cmd", "shopswap"],
+  "scripts": { "test": "node shopswap.test.mjs" },
+  "engines": { "node": ">=18" },
+  "keywords": ["shopify", "shopify-cli", "account-switcher", "multi-account"],
+  "repository": { "type": "git", "url": "git+https://github.com/Archit-Jain05/Shopswap.git" },
+  "license": "MIT"
+}
