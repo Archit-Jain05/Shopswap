@@ -71,3 +71,11 @@ assert.match(strip(frame(st2, 80, 20)), /▸ Asmaan \(shop-b\)/, 'dashboard show
 onKey(st2, 'up'); onKey(st2, 'n'); for (const c of 'First') onKey(st2, c, c); onKey(st2, 'return')
 assert.match(run(['list']), /First \(shop-a\), Asmaan \(shop-b\)/)
 console.log('store rename ok')
+
+// whoami lists live + saved logins and never leaks token fields
+fs.writeFileSync(f, JSON.stringify({ 'h::shop-a.myshopify.com': { sessionsByUserId: { A: { accessToken: 'SECRET-TOKEN', expiresAt: Date.now() + 5 * 36e5, associatedUser: { email: 'a@example.com' } } } } }))
+const who2 = run(['whoami'])
+assert.match(who2, /live .*:\n {2}shop-a {2}a@example\.com {2}valid [45]h/)
+assert.match(who2, /1: .*\(saved\):/)
+assert.doesNotMatch(who2, /SECRET-TOKEN/)
+console.log('whoami ok')

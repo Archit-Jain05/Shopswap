@@ -47,6 +47,7 @@ Or run it directly with `node shopswap.mjs`. The repo also includes `shopswap.cm
 shopswap help                    show help
 shopswap list                    list managed accounts (* marks the active one)
 shopswap status                  show current account
+shopswap whoami                  show which store logins are live and saved (no tokens)
 shopswap switch                  rotate to the next account
 shopswap switch <num|name>       switch to a specific account
 shopswap add [name]              save the current login

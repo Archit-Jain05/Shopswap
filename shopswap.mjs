@@ -37,6 +37,19 @@ const ts = v => (typeof v === 'number' ? v : Date.parse(v)) || 0
 const sessions = dir => Object.values(storeCfg(dir)).flatMap(v => Object.entries(v.sessionsByUserId ?? {}).map(([user, x]) => ({ user, exp: ts(x.expiresAt) })))
 const newest = dir => Math.max(0, ...sessions(dir).map(x => x.exp))
 
+// one line per saved store login, e.g. "my-store  me@example.com  valid 3h". Never prints tokens.
+function logins(dir) {
+  const out = []
+  for (const [k, v] of Object.entries(storeCfg(dir))) {
+    for (const [user, x] of Object.entries(v.sessionsByUserId ?? {})) {
+      const left = ts(x.expiresAt) - Date.now()
+      const state = left > 0 ? `valid ${left > 36e5 ? Math.floor(left / 36e5) + 'h' : Math.ceil(left / 6e4) + 'm'}` : 'expired (refreshes on next use)'
+      out.push(`${(k.split('::')[1] ?? k).replace('.myshopify.com', '')}  ${x.associatedUser?.email ?? `user ${user}`}  ${state}`)
+    }
+  }
+  return out.length ? out : ['(no store logins)']
+}
+
 function snapshot(name) {
   fs.rmSync(prof(name), { recursive: true, force: true })
   fs.mkdirSync(prof(name), { recursive: true })
@@ -63,6 +76,7 @@ Commands:
   shopswap help                       show this help
   shopswap list                       list managed accounts
   shopswap status                     show current account
+  shopswap whoami                     show which store logins are live and saved (no tokens)
   shopswap switch                     rotate to the next account
   shopswap switch <num|name>          switch to a specific account
   shopswap add [name]                 add the current account
@@ -78,6 +92,10 @@ export function run([cmd, ref, ...rest]) {
     case 'list': {
       if (!s.accounts.length) return 'no accounts yet — log in with `shopify auth login`, then `shopswap add`'
       return s.accounts.map((n, i) => `${n === s.active ? '*' : ' '} ${i + 1}: ${n}  (${shops(prof(n)).map(h => show(s, h)).join(', ') || 'no stores'})`).join('\n')
+    }
+    case 'whoami': {
+      const block = (title, dir) => [title, ...logins(dir).map(l => '  ' + l)].join('\n')
+      return [block('live (what Shopify CLI can use now):', roaming), ...s.accounts.map((n, i) => block(`${i + 1}: ${n}${n === s.active ? ' (active)' : ''} (saved):`, prof(n)))].join('\n\n')
     }
     case 'status': return s.active ? `current: ${s.accounts.indexOf(s.active) + 1}: ${s.active}` : 'current: (none managed)'
     case 'add': {
