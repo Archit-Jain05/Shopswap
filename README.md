@@ -1,6 +1,18 @@
 # shopswap
 
-Multi-account switcher for [Shopify CLI](https://shopify.dev/docs/api/shopify-cli). Save each Shopify login once, then switch between them with one command, with no logging out and back in. Modelled on the `cswap` account switcher for Claude Code. Zero dependencies.
+Save and switch the **store logins** of [Shopify CLI](https://shopify.dev/docs/api/shopify-cli) with one command, and see which stores you're logged in to. Modelled on the `cswap` account switcher for Claude Code. Zero dependencies.
+
+## Do you need this?
+
+Shopify CLI 4.x already keeps store logins (`shopify store auth`) **side by side**, so one machine can be logged in to several stores at once. You then pick the store per command with `--store <handle>.myshopify.com`, and no switching is needed.
+
+shopswap is useful when you want to:
+
+- **Keep clients separate:** `switch` removes other clients' store logins from the machine, so a mistyped `--store` can't touch their store.
+- **Save and restore logins** without a browser sign-in each time.
+- **See what's logged in**, with your own names for each store, in a terminal dashboard.
+
+Main-account logins (the one `shopify theme`, `app` and `organization` commands use) are a separate thing. `shopify auth login` has its own `--alias` option, which may already support several accounts. **shopswap has not been tested against it.** If you have two main accounts, check that first.
 
 ```
 $ shopswap list
@@ -92,7 +104,9 @@ Store names are display-only. You still use the real `.myshopify.com` handle wit
 
 ## Limitations
 
-- Built against Shopify CLI 4.x, where store logins are kept per store in one file. Switching accounts swaps the whole set of saved logins. If your CLI version stores its main-account login elsewhere, `switch` may not change it. Please open an issue with your CLI version.
+- Built and tested against Shopify CLI 4.9.x, where store logins are kept per store in one file. `switch` swaps the whole set of saved store logins. It was verified with two real stores: after a switch, the CLI could reach only the stores in that account.
+- A saved account holds whatever logins were live when you ran `add`. If you want strict per-client separation, log in to one client at a time and run `add` right after each login.
+- The main-account login and its `--alias` sessions are untested (see above). Please open an issue with your CLI version if you find out how they behave.
 - Developed and tested on Windows. The macOS and Linux config paths follow Shopify CLI's conventions but are untested. Reports welcome.
 - Only the `shopify-cli-*-nodejs` folders are managed. Environment-variable credentials (`SHOPIFY_CLI_THEME_TOKEN` and similar) are not touched.
 
